@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import MapCore from './services/MapCore';
 import 'leaflet/dist/leaflet.css';
+import '../css/geovisor.css';
 
 /**
  * Geovisor Público - Dinámico (Restaurado)
@@ -12,13 +13,13 @@ import 'leaflet/dist/leaflet.css';
 // ─────────────────────────────────────────────────────────────────────────────
 // E S T A D O
 // ─────────────────────────────────────────────────────────────────────────────
-let core            = null;
-let routesData      = []; // [{ id, name, file_name, paraderos: [] }]
-let userLocation    = null;
-let currentRouteId  = null;
+let core = null;
+let routesData = []; // [{ id, name, file_name, paraderos: [] }]
+let userLocation = null;
+let currentRouteId = null;
 
 // Estados del planificador
-let plannerMode     = null; // 'origin' | 'destination' | null
+let plannerMode = null; // 'origin' | 'destination' | null
 
 // ─────────────────────────────────────────────────────────────────────────────
 // U T I L I D A D E S
@@ -34,14 +35,14 @@ const setLoaderVisible = (v, msg) => {
 // Cálculo de distancia Haversine (en metros)
 function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
-    const φ1 = lat1 * Math.PI/180;
-    const φ2 = lat2 * Math.PI/180;
-    const Δφ = (lat2-lat1) * Math.PI/180;
-    const Δλ = (lon2-lon1) * Math.PI/180;
-    const a  = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-               Math.cos(φ1) * Math.cos(φ2) *
-               Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) *
+        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
 }
 
@@ -50,7 +51,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
  */
 function debounce(func, wait) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
@@ -87,11 +88,11 @@ async function syncGpsPaths() {
     if (core.tripPoints.origin) {
         const originLatLng = core.tripPoints.origin.latlng;
         // Dibujamos linea recta informativa inicialmente
-        core.upsertExtraPath('gps-to-origin', userLocation, originLatLng, { 
-            color: '#3b82f6', 
-            dashArray: '5, 8' 
+        core.upsertExtraPath('gps-to-origin', userLocation, originLatLng, {
+            color: '#3b82f6',
+            dashArray: '5, 8'
         });
-        
+
         // Consultar rutas reales por carretera (una o más)
         const geometries = await core.fetchWalkingRoute(userLocation, originLatLng);
         if (geometries && geometries.length > 0) {
@@ -115,11 +116,11 @@ async function syncGpsPaths() {
         const nearest = core.findNearestStopAcrossAllRoutes(userLocation, visibleRoutes);
         if (nearest) {
             const stopLoc = L.latLng(nearest.lat, nearest.lng);
-            core.upsertExtraPath('gps-to-nearest-stop', userLocation, stopLoc, { 
-                color: '#10b981', 
-                dashArray: '5, 5' 
+            core.upsertExtraPath('gps-to-nearest-stop', userLocation, stopLoc, {
+                color: '#10b981',
+                dashArray: '5, 5'
             });
-            
+
             const geometries = await core.fetchWalkingRoute(userLocation, stopLoc);
             if (geometries && geometries.length > 0) {
                 geometries.forEach((geom, i) => {
@@ -145,7 +146,7 @@ async function syncGpsPaths() {
 async function syncTripWalkingPaths(result) {
     core.clearExtraPath('origin-to-stop');
     core.clearExtraPath('stop-to-dest');
-    
+
     window.lastRealDistA = null;
     window.lastRealDistB = null;
 
@@ -153,7 +154,7 @@ async function syncTripWalkingPaths(result) {
 
     const best = result.best;
     const originLatLng = core.tripPoints.origin.latlng;
-    const destLatLng   = core.tripPoints.destination.latlng;
+    const destLatLng = core.tripPoints.destination.latlng;
 
     // Usamos DIRECTAMENTE los paraderos que findBestTrip (Haversine global) ya eligió.
     // OSRM se usa SOLO para dibujar la línea real por calles, NUNCA para cambiar de paraderos.
@@ -204,7 +205,7 @@ async function syncTripWalkingPaths(result) {
 function calculatePathDistance(geometry) {
     let dist = 0;
     for (let i = 0; i < geometry.length - 1; i++) {
-        dist += L.latLng(geometry[i]).distanceTo(L.latLng(geometry[i+1]));
+        dist += L.latLng(geometry[i]).distanceTo(L.latLng(geometry[i + 1]));
     }
     return dist;
 }
@@ -222,8 +223,8 @@ const debouncedSyncWalkingPaths = debounce((result) => syncTripWalkingPaths(resu
  * Ahora analiza TODAS las rutas y recomienda la mejor automaticamente.
  */
 function updateTripUI() {
-    const badge       = document.getElementById('trip-summary-badge');
-    
+    const badge = document.getElementById('trip-summary-badge');
+
     if (!core.tripPoints.origin || !core.tripPoints.destination) {
         badge?.classList.add('hidden');
         updateGpsToOriginBadge();
@@ -249,18 +250,18 @@ function updateTripUI() {
 }
 
 function updateTripUITexts(best) {
-    const badge       = document.getElementById('trip-summary-badge');
+    const badge = document.getElementById('trip-summary-badge');
     const routeNameEl = document.getElementById('trip-summary-route-name');
-    const walkTimeEl  = document.getElementById('trip-time-text');
+    const walkTimeEl = document.getElementById('trip-time-text');
     const originTextEl = document.getElementById('trip-origin-text');
-    const destTextEl   = document.getElementById('trip-dest-text');
-    const distTextEl   = document.getElementById('trip-dist-text');
+    const destTextEl = document.getElementById('trip-dest-text');
+    const distTextEl = document.getElementById('trip-dist-text');
 
     badge?.classList.remove('hidden', 'trip-summary-error');
-    
+
     document.getElementById('trip-summary-walk-time')?.style.setProperty('display', 'flex', 'important');
     document.querySelector('.trip-summary-footer')?.style.setProperty('display', 'flex', 'important');
-    
+
     document.querySelectorAll('#trip-summary-content .trip-step').forEach(step => {
         step.style.setProperty('display', 'flex', 'important');
         const dot = step.querySelector('.trip-dot');
@@ -269,7 +270,7 @@ function updateTripUITexts(best) {
 
     // Sincronización de textos con distancias REALES
     routeNameEl.textContent = best.routeName;
-    
+
     // Usamos las distancias reales si están disponibles, sino las geográficas
     const dA = window.lastRealDistA || best.distToA;
     const dB = window.lastRealDistB || best.distToB;
@@ -288,9 +289,9 @@ function updateTripUITexts(best) {
     const stopBNameFormatted = (best.stopB.name || 'Paradero ' + (best.idxB + 1));
 
     originTextEl.innerHTML = `Sube en: ${stopANameFormatted} (~${dA}m)`;
-    destTextEl.innerHTML   = `Baja en: ${stopBNameFormatted} (~${dB}m)`;
-    distTextEl.textContent   = `Caminata total: ${totalDist}m`;
-    walkTimeEl.textContent   = `${Math.max(1, Math.ceil(totalDist / 80))} min aprox.`;
+    destTextEl.innerHTML = `Baja en: ${stopBNameFormatted} (~${dB}m)`;
+    distTextEl.textContent = `Caminata total: ${totalDist}m`;
+    walkTimeEl.textContent = `${Math.max(1, Math.ceil(totalDist / 80))} min aprox.`;
 
     updateGpsToOriginBadge();
 }
@@ -300,19 +301,19 @@ function showTripUIError() {
     const badge = document.getElementById('trip-summary-badge');
     const routeNameEl = document.getElementById('trip-summary-route-name');
     const originTextEl = document.getElementById('trip-origin-text');
-    const destTextEl   = document.getElementById('trip-dest-text');
+    const destTextEl = document.getElementById('trip-dest-text');
 
     badge?.classList.remove('hidden');
     badge?.classList.add('trip-summary-error');
     routeNameEl.textContent = 'Sin rutas disponibles';
-    
+
     document.getElementById('trip-dest-text').textContent = '';
     document.getElementById('trip-dist-text').textContent = '';
     document.getElementById('trip-time-text').textContent = '';
-    
+
     const timeChip = document.getElementById('trip-summary-walk-time');
     if (timeChip) timeChip.style.setProperty('display', 'none', 'important');
-    
+
     const summaryFooter = document.querySelector('.trip-summary-footer');
     if (summaryFooter) summaryFooter.style.setProperty('display', 'none', 'important');
 
@@ -320,7 +321,7 @@ function showTripUIError() {
     if (alternativesEl) alternativesEl.style.setProperty('display', 'none', 'important');
 
     originTextEl.textContent = 'Activa al menos una ruta en el panel lateral para calcular tu viaje.';
-    
+
     document.querySelectorAll('#trip-summary-content .trip-step').forEach((step, idx) => {
         if (idx > 0) step.style.setProperty('display', 'none', 'important');
         else {
@@ -395,8 +396,8 @@ function findAndZoomToNearestStop(routeId) {
 
     if (nearest) {
         const badge = document.getElementById('nearest-stop-badge');
-        const text  = document.getElementById('nearest-stop-text');
-        
+        const text = document.getElementById('nearest-stop-text');
+
         if (badge && text) {
             badge.classList.remove('hidden');
             const distKm = (minDistance / 1000).toFixed(1);
@@ -405,7 +406,7 @@ function findAndZoomToNearestStop(routeId) {
 
         // Auto-zoom al paradero sugerido
         core.map.setView([nearest.lat, nearest.lng], 16, { animate: true });
-        
+
         // Efecto visual: popup temporal o resaltar
         L.popup()
             .setLatLng([nearest.lat, nearest.lng])
@@ -428,7 +429,7 @@ function buildRoutesList(rutas) {
     }
 
     section.innerHTML = '';
-    
+
     // Nueva clase para lista vertical
     section.className = 'routes-stack';
 
@@ -436,9 +437,9 @@ function buildRoutesList(rutas) {
         const card = document.createElement('div');
         card.className = 'route-card';
         card.dataset.routeId = r.id;
-        
+
         // Colores compartidos con MapCore logic
-        const colors = ['#6366f1','#f43f5e','#0284c7','#d946ef','#8b5cf6'];
+        const colors = ['#6366f1', '#f43f5e', '#0284c7', '#d946ef', '#8b5cf6'];
         const color = colors[idx % colors.length];
 
         card.innerHTML = `
@@ -478,7 +479,7 @@ async function toggleRoute(route, index, isVisible) {
         // Solo mostrar loader si no es la carga inicial masiva (manejado en init)
         const isBulk = document.body.dataset.loadingBulk === 'true';
         if (!isBulk) setLoaderVisible(true, `Trazando ${route.name}...`);
-        
+
         try {
             // Cargar KMZ dinámicamente si no está en cache de MapCore
             if (!route.file_name || route.file_name.trim() === "") {
@@ -491,10 +492,10 @@ async function toggleRoute(route, index, isVisible) {
             } else {
                 core.overlayGroups[route.name].addTo(core.map);
             }
-            
+
             // Dibujar paraderos asociados
             drawParaderos(route.paraderos, route.name);
-            
+
             // Auto-zoom si hay GPS y es acción manual del usuario
             if (userLocation && !isBulk) {
                 findAndZoomToNearestStop(route.id);
@@ -508,7 +509,7 @@ async function toggleRoute(route, index, isVisible) {
         // Ocultar ruta
         if (core.overlayGroups[route.name]) core.map.removeLayer(core.overlayGroups[route.name]);
         if (core.overlayGroups[`Paraderos: ${route.name}`]) core.map.removeLayer(core.overlayGroups[`Paraderos: ${route.name}`]);
-        
+
         if (currentRouteId == route.id) {
             currentRouteId = null;
             document.getElementById('nearest-stop-badge')?.classList.add('hidden');
@@ -540,10 +541,10 @@ function drawParaderos(paraderos, routeName) {
                     <path d="M7 8h10M7 11h10M8 15h2v2H8zm6 0h2v2h-2zM6 7a2 2 0 012-2h8a2 2 0 012 2v9a2 2 0 01-2 2H8a2 2 0 01-2-2V7z" 
                           stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>`,
-                iconSize:[24,24], iconAnchor:[12,12]
+                iconSize: [24, 24], iconAnchor: [12, 12]
             })
         }).bindTooltip(p.name);
-        
+
         // Se comenta el evento de clic por solicitud del usuario (sin nombres/descripciones de momento)
         /*
         marker.on('click', () => {
@@ -570,8 +571,8 @@ function drawParaderos(paraderos, routeName) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function setupLayerPanelToggle() {
-    const btn     = document.getElementById('btn-toggle-layers');
-    const panel   = document.getElementById('geovisor-layers-panel');
+    const btn = document.getElementById('btn-toggle-layers');
+    const panel = document.getElementById('geovisor-layers-panel');
     const overlay = document.getElementById('geovisor-panel-overlay');
 
     if (!btn || !panel) return;
@@ -579,7 +580,7 @@ function setupLayerPanelToggle() {
     const toggle = () => {
         const isHidden = panel.classList.toggle('geovisor-layers-panel--hidden');
         btn.setAttribute('aria-expanded', !isHidden);
-        
+
         // Sincronizar clase con el body (para ocultar badges en movil)
         document.body.classList.toggle('sidebar-open', !isHidden);
 
@@ -598,9 +599,9 @@ function setupLayerPanelToggle() {
 }
 
 function setupGps() {
-    const backdrop   = document.getElementById('gps-permission-backdrop');
+    const backdrop = document.getElementById('gps-permission-backdrop');
     const btnConfirm = document.getElementById('btn-gps-confirm');
-    const btnCancel  = document.getElementById('btn-gps-cancel');
+    const btnCancel = document.getElementById('btn-gps-cancel');
 
     const hideModal = () => backdrop?.classList.add('hidden');
     const showModal = () => backdrop?.classList.remove('hidden');
@@ -627,7 +628,7 @@ function setupGps() {
     core.map.on('locationfound', (e) => {
         userLocation = e.latlng;
         setLoaderVisible(false);
-        
+
         // Crear marcador de usuario si no existe
         if (!window.userMarker) {
             window.userMarker = L.circleMarker(e.latlng, {
@@ -678,15 +679,15 @@ function setupBaseMapSelector() {
     if (!container) return;
 
     const baseMaps = [
-        { 
-            id: 'Mapa claro', 
-            name: 'Claro (Carto)', 
-            thumb: 'https://carto.com/help/images/basemaps/positron_full.png' 
+        {
+            id: 'Mapa claro',
+            name: 'Claro (Carto)',
+            thumb: 'https://carto.com/help/images/basemaps/positron_full.png'
         },
-        { 
-            id: 'OpenStreetMap', 
-            name: 'Estándar (OSM)', 
-            thumb: 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Openstreetmap_logo.svg' 
+        {
+            id: 'OpenStreetMap',
+            name: 'Estándar (OSM)',
+            thumb: 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Openstreetmap_logo.svg'
         }
     ];
 
@@ -732,8 +733,8 @@ function setupSearch() {
 
 function setupTripPlanner() {
     const btnOrigin = document.getElementById('btn-set-origin');
-    const btnDest   = document.getElementById('btn-set-dest');
-    const btnClear  = document.getElementById('btn-clear-planner');
+    const btnDest = document.getElementById('btn-set-dest');
+    const btnClear = document.getElementById('btn-clear-planner');
     const btnGpsOrigin = document.getElementById('btn-gps-as-origin');
 
     if (!btnOrigin || !btnDest) return;
@@ -839,7 +840,7 @@ function setupTripPlanner() {
      */
     core.map.on('click', (e) => {
         if (!plannerMode) return;
-        
+
         core.setTripPoint(plannerMode, e.latlng);
         plannerMode = null;
         updateButtonStates();
@@ -865,9 +866,9 @@ function setupTripPlanner() {
 function setupTripSummaryToggle() {
     const btn = document.getElementById('btn-toggle-trip-summary');
     const badge = document.getElementById('trip-summary-badge');
-    
+
     if (!btn || !badge) return;
-    
+
     btn.addEventListener('click', (e) => {
         // Detener propagación para no activar clics en el mapa si los hay debajo
         e.stopPropagation();
@@ -900,7 +901,7 @@ async function initPublicGeovisor() {
     setLoaderVisible(true, 'Cargando red de transporte...');
     routesData = await fetchRutasPublicas();
     buildRoutesList(routesData);
-    
+
     // NUEVO: Cargar automáticamente todas las rutas y paraderos al inicio sans-flicker
     const allChecks = document.querySelectorAll('#layers-overlay-section .layer-check');
     if (allChecks.length > 0) {
@@ -909,11 +910,11 @@ async function initPublicGeovisor() {
             check.click(); // Esto disparará toggleRoute programáticamente
         }
         delete document.body.dataset.loadingBulk;
-        
+
         // Ajustar el mapa para ver todas las rutas cargadas
         setTimeout(() => core.fitAllOverlays(), 1000);
     }
-    
+
     setLoaderVisible(false);
 
     // Cerrar paneles iniciales en móvil

@@ -2,6 +2,8 @@
 // | Lógica del Layout del Dashboard (Versión 2.0)
 // |--------------------------------------------------------------------------
 
+import '../css/dashboard.css';
+
 // --- Funciones de Utilidad (Mantenidas de tu versión) ---
 function clearAuthStorage() {
     sessionStorage.removeItem('auth_token');
@@ -20,7 +22,7 @@ function redirectToHome(message) {
 }
 
 // --- GUARDIÁN DE SEGURIDAD (Mantenido de tu versión) ---
-(function() {
+(function () {
     console.log("Ejecutando Guardián de Seguridad del Dashboard...");
 
     // Ya no existe auth_token en LocalStorage (Sanctum HttpOnly), así que solo evaluamos el rol.
@@ -68,7 +70,7 @@ function redirectToHome(message) {
 
 
 // --- LÓGICA DE INTERACTIVIDAD DEL LAYOUT (¡NUEVO!) ---
-(function() {
+(function () {
 
     /**
      * Lógica para el menú lateral responsive (móvil)
@@ -163,7 +165,7 @@ function redirectToHome(message) {
 
                 if (headerTitle) {
                     const span = link.querySelector('span');
-                    if(span) headerTitle.textContent = span.textContent;
+                    if (span) headerTitle.textContent = span.textContent;
                 }
 
                 views.forEach(view => {

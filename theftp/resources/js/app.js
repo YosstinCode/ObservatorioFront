@@ -14,3 +14,4 @@ import './modules/app/app-ui.js';         // Swiper, reloj, menú móvil, contro
 import './modules/app/app-register.js';   // Formulario de registro + validaciones client-side
 import './modules/app/app-login.js';      // Formulario de login + flujo OAuth (login → /me → /rol)
 import './modules/app/app-forgot-password.js'; // Flujo de recuperación de contraseña en 2 pasos
+import '../css/app.css';
