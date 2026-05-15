@@ -31,16 +31,9 @@ COPY . /var/www/html
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Create .env from .env.example (useful if Render doesn't provide one via Secret Files)
-RUN cp .env.example .env
-
 # Install PHP dependencies
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-dev --optimize-autoloader
-
-# Generate app key (can be overridden by Render Environment Variables)
-RUN php artisan key:generate --force
-
 
 # Install Node.js dependencies and build frontend assets
 RUN npm install && npm run build
