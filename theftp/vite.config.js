@@ -16,11 +16,5 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
-    ],
-    server: {
-        host: '0.0.0.0',
-        origin: 'http://192.168.1.41:5173', // IP del PC → @vite() genera URLs alcanzables por el celular
-        cors: true,
-        allowedHosts: true,
-    },
+    ]
 });
